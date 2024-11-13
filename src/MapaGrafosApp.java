@@ -4,28 +4,28 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 
-// Clase principal MapaGrafosApp
-public class MapaGrafosApp extends JFrame {
+
+    public class MapaGrafosApp extends JFrame {
 
     public MapaGrafosApp() {
-        setTitle("Mapa de Grafos");
-        setSize(800, 600);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
+            setTitle("Mapa de Grafos");
+             setSize(800, 600);
+              setDefaultCloseOperation(EXIT_ON_CLOSE);
+              setLocationRelativeTo(null);
+             setLayout(new BorderLayout());
 
-        // Instanciamos el panel de grafo
+
         GrafoPanel grafoPanel = new GrafoPanel();
         add(grafoPanel, BorderLayout.CENTER);
 
-        // Agregamos botones de acción
-        JPanel controlPanel = new JPanel();
-        JButton findPathButton = new JButton("Encontrar Camino");
-        JButton editModeButton = new JButton("Modo Editor");
-        JButton connectNodesButton = new JButton("Conectar Nodos");
 
-        findPathButton.addActionListener(e -> grafoPanel.buscarCamino());
-        editModeButton.addActionListener(e -> grafoPanel.cambiarModoEditor());
+        JPanel controlPanel = new JPanel();
+         JButton findPathButton = new JButton("Encontrar Camino");
+          JButton editModeButton = new JButton("Activar el modo editor ");
+          JButton connectNodesButton = new JButton("Conectar Nodos");
+
+            findPathButton.addActionListener(e -> grafoPanel.buscarCamino());
+          editModeButton.addActionListener(e -> grafoPanel.cambiarModoEditor());
         connectNodesButton.addActionListener(e -> grafoPanel.conectarNodos());
 
         controlPanel.add(findPathButton);
@@ -46,28 +46,28 @@ public class MapaGrafosApp extends JFrame {
             nodos = new ArrayList<>();
             aristas = new ArrayList<>();
 
-            // Configurar eventos de clic para agregar o seleccionar nodos en modo editor
+
             addMouseListener(new MouseAdapter() {
                 public void mouseClicked(MouseEvent e) {
                     if (modoEditor) {
                         Nodo nodoSeleccionado = obtenerNodoEnPosicion(e.getX(), e.getY());
                         if (nodoSeleccionado == null) {
-                            // Si no hay un nodo en la posición, agregamos un nuevo nodo
+
                             Nodo nodo = new Nodo(e.getX(), e.getY(), "Nodo" + (nodos.size() + 1));
                             nodos.add(nodo);
                             repaint();
                         } else {
-                            // Si ya se seleccionó un primer nodo, conectar al segundo nodo seleccionado
+
                             if (primerNodoSeleccionado == null) {
                                 primerNodoSeleccionado = nodoSeleccionado;
                                 JOptionPane.showMessageDialog(GrafoPanel.this, "Primer nodo seleccionado: " + primerNodoSeleccionado.getNombre());
                             } else {
-                                // Determinar si el clic es izquierdo o derecho
+
                                 if (SwingUtilities.isLeftMouseButton(e)) {
                                     int distancia = Integer.parseInt(JOptionPane.showInputDialog("Distancia entre " + primerNodoSeleccionado.getNombre() + " y " + nodoSeleccionado.getNombre() + ":"));
                                     aristas.add(new Arista(primerNodoSeleccionado, nodoSeleccionado, distancia, false)); // No dirigida
                                 } else if (SwingUtilities.isRightMouseButton(e)) {
-                                    // Evitar crear una arista dirigida en la dirección opuesta
+
                                     if (!existeAristaDireccional(primerNodoSeleccionado, nodoSeleccionado)) {
                                         int distancia = Integer.parseInt(JOptionPane.showInputDialog("Distancia entre " + primerNodoSeleccionado.getNombre() + " y " + nodoSeleccionado.getNombre() + ":"));
                                         aristas.add(new Arista(primerNodoSeleccionado, nodoSeleccionado, distancia, true)); // Dirigida
@@ -84,14 +84,14 @@ public class MapaGrafosApp extends JFrame {
             });
         }
 
-        // Método para cambiar el modo editor
+
         public void cambiarModoEditor() {
             modoEditor = !modoEditor;
             String modo = modoEditor ? "Editor Activado" : "Editor Desactivado";
             JOptionPane.showMessageDialog(this, modo);
         }
 
-        // Método para conectar nodos seleccionados manualmente
+
         public void conectarNodos() {
             if (!modoEditor) {
                 JOptionPane.showMessageDialog(this, "Debes estar en el modo editor para conectar nodos.");
@@ -101,7 +101,7 @@ public class MapaGrafosApp extends JFrame {
             JOptionPane.showMessageDialog(this, "Haz clic en dos nodos para conectarlos.");
         }
 
-        // Método para buscar el camino más corto entre nodos
+
         public void buscarCamino() {
             if (nodos.size() < 2) {
                 JOptionPane.showMessageDialog(this, "Agrega al menos dos nodos.");
@@ -148,7 +148,7 @@ public class MapaGrafosApp extends JFrame {
                     if (arista.getNodoA().equals(actual) || arista.getNodoB().equals(actual)) {
                         Nodo vecino = arista.getOtroNodo(actual);
 
-                        // Solo considerar aristas no dirigidas o que respetan la dirección
+
                         if (arista.isDirigida() && !arista.getNodoA().equals(actual)) continue;
 
                         int nuevaDistancia = distancias.get(actual) + arista.getDistancia();
@@ -190,15 +190,15 @@ public class MapaGrafosApp extends JFrame {
             return distanciaTotal;
         }
 
-        // Verifica si ya existe una arista dirigida en la dirección A -> B
+
         private boolean existeAristaDireccional(Nodo nodoA, Nodo nodoB) {
-            for (Arista arista : aristas) {
+             for (Arista arista : aristas) {
                 if (arista.getNodoA().equals(nodoA) && arista.getNodoB().equals(nodoB) && arista.isDirigida()) {
                     return true;
                 }
             }
-            return false;
-        }
+                 return false;
+            }
 
         private Nodo obtenerNodoPorNombre(String nombre) {
             return nodos.stream().filter(n -> n.getNombre().equals(nombre)).findFirst().orElse(null);
@@ -243,11 +243,11 @@ public class MapaGrafosApp extends JFrame {
         public String toString() {
             return nombre;
         }
-
+        //panel de color de grafos y nombres
         public void dibujar(Graphics g) {
             g.setColor(Color.BLUE);
             g.fillOval(x - 10, y - 10, 20, 20);
-            g.setColor(Color.WHITE);
+            g.setColor(Color.black);
             g.drawString(nombre, x - 10, y - 12);
         }
     }
@@ -297,8 +297,7 @@ public class MapaGrafosApp extends JFrame {
                 g.fillPolygon(new int[]{nodoB.x, x1, x2}, new int[]{nodoB.y, y1, y2}, 3);
             }
             g.setColor(Color.BLACK);
-            g.drawString(String.valueOf(distancia), (nodoA.x + nodoB.x) / 2, (nodoA.y + nodoB.y) / 2);
-        }
+            g.drawString(String.valueOf(distancia), (nodoA.x + nodoB.x) / 2, (nodoA.y + nodoB.y) / 2);}
     }
 
     public static void main(String[] args) {

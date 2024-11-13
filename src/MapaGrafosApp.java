@@ -62,8 +62,19 @@ public class MapaGrafosApp extends JFrame {
                                 primerNodoSeleccionado = nodoSeleccionado;
                                 JOptionPane.showMessageDialog(GrafoPanel.this, "Primer nodo seleccionado: " + primerNodoSeleccionado.getNombre());
                             } else {
-                                int distancia = Integer.parseInt(JOptionPane.showInputDialog("Distancia entre " + primerNodoSeleccionado.getNombre() + " y " + nodoSeleccionado.getNombre() + ":"));
-                                aristas.add(new Arista(primerNodoSeleccionado, nodoSeleccionado, distancia));
+                                // Determinar si el clic es izquierdo o derecho
+                                if (SwingUtilities.isLeftMouseButton(e)) {
+                                    int distancia = Integer.parseInt(JOptionPane.showInputDialog("Distancia entre " + primerNodoSeleccionado.getNombre() + " y " + nodoSeleccionado.getNombre() + ":"));
+                                    aristas.add(new Arista(primerNodoSeleccionado, nodoSeleccionado, distancia, false)); // No dirigida
+                                } else if (SwingUtilities.isRightMouseButton(e)) {
+                                    // Evitar crear una arista dirigida en la dirección opuesta
+                                    if (!existeAristaDireccional(primerNodoSeleccionado, nodoSeleccionado)) {
+                                        int distancia = Integer.parseInt(JOptionPane.showInputDialog("Distancia entre " + primerNodoSeleccionado.getNombre() + " y " + nodoSeleccionado.getNombre() + ":"));
+                                        aristas.add(new Arista(primerNodoSeleccionado, nodoSeleccionado, distancia, true)); // Dirigida
+                                    } else {
+                                        JOptionPane.showMessageDialog(GrafoPanel.this, "Ya existe una arista dirigida en esa dirección.");
+                                    }
+                                }
                                 primerNodoSeleccionado = null;
                                 repaint();
                             }
@@ -136,6 +147,10 @@ public class MapaGrafosApp extends JFrame {
                 for (Arista arista : aristas) {
                     if (arista.getNodoA().equals(actual) || arista.getNodoB().equals(actual)) {
                         Nodo vecino = arista.getOtroNodo(actual);
+
+                        // Solo considerar aristas no dirigidas o que respetan la dirección
+                        if (arista.isDirigida() && !arista.getNodoA().equals(actual)) continue;
+
                         int nuevaDistancia = distancias.get(actual) + arista.getDistancia();
 
                         if (nuevaDistancia < distancias.get(vecino)) {
@@ -175,6 +190,16 @@ public class MapaGrafosApp extends JFrame {
             return distanciaTotal;
         }
 
+        // Verifica si ya existe una arista dirigida en la dirección A -> B
+        private boolean existeAristaDireccional(Nodo nodoA, Nodo nodoB) {
+            for (Arista arista : aristas) {
+                if (arista.getNodoA().equals(nodoA) && arista.getNodoB().equals(nodoB) && arista.isDirigida()) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private Nodo obtenerNodoPorNombre(String nombre) {
             return nodos.stream().filter(n -> n.getNombre().equals(nombre)).findFirst().orElse(null);
         }
@@ -191,11 +216,9 @@ public class MapaGrafosApp extends JFrame {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-
             for (Arista arista : aristas) {
                 arista.dibujar(g);
             }
-
             for (Nodo nodo : nodos) {
                 nodo.dibujar(g);
             }
@@ -224,23 +247,21 @@ public class MapaGrafosApp extends JFrame {
         public void dibujar(Graphics g) {
             g.setColor(Color.BLUE);
             g.fillOval(x - 10, y - 10, 20, 20);
-            g.setColor(Color.BLACK);
-            g.drawString(nombre, x - 10, y - 15);
+            g.setColor(Color.WHITE);
+            g.drawString(nombre, x - 10, y - 12);
         }
     }
 
     class Arista {
         private Nodo nodoA, nodoB;
         private int distancia;
+        private boolean dirigida;
 
-        public Arista(Nodo nodoA, Nodo nodoB, int distancia) {
+        public Arista(Nodo nodoA, Nodo nodoB, int distancia, boolean dirigida) {
             this.nodoA = nodoA;
             this.nodoB = nodoB;
             this.distancia = distancia;
-        }
-
-        public int getDistancia() {
-            return distancia;
+            this.dirigida = dirigida;
         }
 
         public Nodo getNodoA() {
@@ -251,16 +272,32 @@ public class MapaGrafosApp extends JFrame {
             return nodoB;
         }
 
+        public int getDistancia() {
+            return distancia;
+        }
+
+        public boolean isDirigida() {
+            return dirigida;
+        }
+
         public Nodo getOtroNodo(Nodo nodo) {
             return nodo.equals(nodoA) ? nodoB : nodoA;
         }
 
         public void dibujar(Graphics g) {
-            g.setColor(Color.GRAY);
+            g.setColor(dirigida ? Color.RED : Color.BLACK);
             g.drawLine(nodoA.x, nodoA.y, nodoB.x, nodoB.y);
-            int midX = (nodoA.x + nodoB.x) / 2;
-            int midY = (nodoA.y + nodoB.y) / 2;
-            g.drawString(String.valueOf(distancia), midX, midY);
+            if (dirigida) {
+                int arrowSize = 10;
+                double angle = Math.atan2(nodoB.y - nodoA.y, nodoB.x - nodoA.x);
+                int x1 = nodoB.x - (int) (arrowSize * Math.cos(angle - Math.PI / 6));
+                int y1 = nodoB.y - (int) (arrowSize * Math.sin(angle - Math.PI / 6));
+                int x2 = nodoB.x - (int) (arrowSize * Math.cos(angle + Math.PI / 6));
+                int y2 = nodoB.y - (int) (arrowSize * Math.sin(angle + Math.PI / 6));
+                g.fillPolygon(new int[]{nodoB.x, x1, x2}, new int[]{nodoB.y, y1, y2}, 3);
+            }
+            g.setColor(Color.BLACK);
+            g.drawString(String.valueOf(distancia), (nodoA.x + nodoB.x) / 2, (nodoA.y + nodoB.y) / 2);
         }
     }
 
